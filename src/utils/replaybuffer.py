@@ -6,10 +6,11 @@ import random
 # As well as implementations from Patrick Emami, Hugo Germain &  Machine Learning with Phil
 
 class ReplayBuffer(object):
-    def __init__(self, buffer_size):
+    def __init__(self, buffer_size, random_seed=0):
         self.buffer = deque()
         self.buffer_size = buffer_size
         self.count = 0
+        random.seed(random_seed)
     
     def store(self, state, action, reward, done, new_state):
         if self.count < self.buffer_size:
@@ -22,13 +23,7 @@ class ReplayBuffer(object):
     def sample(self, batch_size):
         experiences = random.sample(self.buffer, min(self.count, batch_size))
         
-        states = np.array([_[0] for _ in experiences])
-        actions = np.array([_[1] for _ in experiences])
-        rewards = np.array([_[2] for _ in experiences])
-        dones = np.array([_[3] for _ in experiences])
-        new_states = np.array([_[4] for _ in experiences])
-
-        return states, actions, rewards, dones, new_states
+        return map(np.array, zip(*experiences))
     
     def get_size(self):
         return self.count
