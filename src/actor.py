@@ -28,7 +28,10 @@ class Actor:
 
         return Model(inputs, outputs)
     
-    # C'est sketch mais je trouve pas de meilleure alternative ...
+    # Train the actor network to maximise the Action - State pair's Q-value
+    # outputs-gradients :   Gradient of the Action - State pair's Q-value from Critic with respect to the action
+    # 
+    #  state -> Actor -> [state, action] -> Critic -> Q-value
     def get_optimize(self):
         outputs_gradients = kbckend.placeholder(shape = (None, self.outputs_dim))
         params_gradients = tf.gradients(self.model.output, self.model.trainable_weights, -outputs_gradients)
@@ -42,6 +45,7 @@ class Actor:
     def choose_action_target(self, state):
         return self.target_model.predict(state)
     
+    # Backpropagation with gradient of the Action - State pair's Q-value from Critic with respect to the action
     def train(self, states, gradients):
         self.optimize([states, gradients])
     
