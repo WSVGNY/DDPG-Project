@@ -9,16 +9,16 @@ from keras.layers import Input, Dense
 LAYER1_SIZE = 400
 LAYER2_SIZE = 300
 
-class ActorNetwork:
-    def __init__(self, inputs_dim, outputs_dim, lr, tau):
-        self.inputs_dim = inputs_dim
-        self.outputs_dim = outputs_dim
+class Actor:
+    def __init__(self, states_dim, actions_dim, lr, tau):
+        self.inputs_dim = states_dim
+        self.outputs_dim = actions_dim
         self.lr = lr
         self.tau = tau
 
         self.model = self.get_model()
         self.target_model = self.get_model()
-        self.optimize = self.get_optimizer()
+        self.optimize = self.get_optimize()
 
     def get_model(self):
         inputs = Input((self.inputs_dim))
@@ -28,7 +28,8 @@ class ActorNetwork:
 
         return Model(inputs, outputs)
     
-    def get_optimizer(self):
+    # C'est sketch mais je trouve pas de meilleure alternative ...
+    def get_optimize(self):
         outputs_gradients = kbckend.placeholder(shape = (None, self.outputs_dim))
         params_gradients = tf.gradients(self.model.output, self.model.trainable_weights, -outputs_gradients)
         gradients = zip(params_gradients, self.model.trainable_weights)
