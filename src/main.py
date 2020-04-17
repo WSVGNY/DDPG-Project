@@ -23,7 +23,7 @@ DATETIME = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 MONITOR_DIR = f'./results/${DATETIME}/gym_ddpg'
 # SUMMARY_DIR = f'./results/${DATETIME}/tf_ddpg'
 import tensorflow as tf
-tf.compat.v1.enable_eager_execution()
+tf.compat.v1.disable_eager_execution()
 
 def main():
     env = LunarLanderGym().env
@@ -32,7 +32,7 @@ def main():
 
     agent = Agent(state_dim, action_dim)
     
-    # agent.train(env, render=True)
+    agent.train(env, render=True)
     agent.evaluate(env, 10)
 
     env.close()

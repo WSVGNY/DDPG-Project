@@ -45,7 +45,7 @@ class Agent:
                 episode_reward += reward
                 time += 1
         
-                if self.replay_buffer.size() > MINIBATCH_SIZE:
+                if self.replay_buffer.get_size() > MINIBATCH_SIZE:
                     # Je fais un minibatch mother-fucker
                     states, actions, rewards, dones, next_states = self.replay_buffer.sample(MINIBATCH_SIZE)
                     #q_next
@@ -53,8 +53,8 @@ class Agent:
                     target_rewards = self.bellman(rewards, dones, next_state_rewards)
 
                     # Update models
-                    self.critic.train_on_batch(states, actions, target_rewards)
-                    training_actions = self.actor.choose_action()
+                    self.critic.train(states, actions, target_rewards)
+                    training_actions = self.actor.choose_action(states)
                     training_actions_gradients = self.critic.get_action_gradients(states, training_actions)
                     self.actor.train(states, training_actions_gradients)
 
@@ -71,8 +71,8 @@ class Agent:
             
             while not done:
                 env.render()
-                # action = self.actor.choose_action(np.expand_dims(state, 0))[0]
-                action = env.action_space.sample()
+                action = self.actor.choose_action(np.expand_dims(state, 0))[0]
+                # action = env.action_space.sample()
                 next_state, reward, done, _ = env.step(action)                
                 state = next_state
                 episode_reward += reward

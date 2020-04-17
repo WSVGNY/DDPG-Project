@@ -1,11 +1,11 @@
 import numpy as np
 import tensorflow as tf
-import keras.backend as kbckend
+import tensorflow.keras.backend as kbckend
 
-from keras.initializers import RandomUniform
-from keras.models import Model
-from keras.optimizers import Adam
-from keras.layers import Input, Dense, concatenate, Flatten
+from tensorflow.keras.initializers import RandomUniform
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Input, Dense, concatenate, Flatten
 
 LAYER1_SIZE = 400
 LAYER2_SIZE = 300
@@ -28,8 +28,10 @@ class Critic:
         layer1 = Dense(LAYER1_SIZE, activation = 'relu')(state_inputs)
         layer2 = Dense(LAYER2_SIZE, activation = 'relu')(concatenate([Flatten()(layer1), action_inputs]))
         outputs = Dense(1, activation = 'linear', kernel_initializer = RandomUniform(-3e-3, 3e-3))(layer2)
+        model = Model([state_inputs, action_inputs], outputs)
+        model.compile(Adam(self.lr), 'mse')
 
-        return Model([state_inputs, action_inputs], outputs).compile(Adam(self.lr), 'mse')
+        return model
     
     def get_action_gradients(self, states, actions):
         return self.action_gradients([states, actions])
@@ -46,5 +48,6 @@ class Critic:
     def update_target_model(self):
         weights = self.model.get_weights()
         target_weights = self.target_model.get_weights()
-        [target_weights[i].assign(self.tau * weights[i] + (1 - self.tau) * target_weights[i]) for i in range(len(weights))]
+        for i in range(len(weights)):
+            target_weights[i] = self.tau * weights[i] + (1 - self.tau) * target_weights[i]
         self.target_model.set_weights(target_weights)

@@ -1,10 +1,10 @@
 import numpy as np
 import tensorflow as tf
-import keras.backend as kbckend
+import tensorflow.keras.backend as kbckend
 
-from keras.initializers import RandomUniform
-from keras.models import Model
-from keras.layers import Input, Dense
+from tensorflow.keras.initializers import RandomUniform
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Dense
 
 LAYER1_SIZE = 400
 LAYER2_SIZE = 300
@@ -37,7 +37,7 @@ class Actor:
         params_gradients = tf.gradients(self.model.output, self.model.trainable_weights, -outputs_gradients)
         gradients = zip(params_gradients, self.model.trainable_weights)
 
-        return kbckend.function([self.model.input, outputs_gradients], [tf.optimizers.Adam(self.lr).apply_gradients(gradients)])
+        return kbckend.function(inputs=[self.model.input, outputs_gradients], outputs=[kbckend.constant(1)], updates=[tf.optimizers.Adam(self.lr).apply_gradients(gradients)][1:])
     
     def choose_action(self, state):
         return self.model.predict(state)
@@ -52,5 +52,6 @@ class Actor:
     def update_target_model(self):
         weights = self.model.get_weights()
         target_weights = self.target_model.get_weights()
-        [target_weights[i].assign(self.tau * weights[i] + (1 - self.tau) * target_weights[i]) for i in range(len(weights))]
+        for i in range(len(weights)):
+            target_weights[i] = self.tau * weights[i] + (1 - self.tau) * target_weights[i]
         self.target_model.set_weights(target_weights)
