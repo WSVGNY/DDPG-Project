@@ -11,6 +11,7 @@ class Agent:
         self.states_dim = states_dim
         self.actions_dim = actions_dim
         self.gamma = gamma
+        self.lr = lr
         self.replay_buffer = ReplayBuffer(buffer_size)
         self.actor = Actor(self.states_dim, self.actions_dim, 0.1 * lr, tau)
         self.critic = Critic(self.states_dim, self.actions_dim, lr, tau)
@@ -34,6 +35,9 @@ class Agent:
             done = False
             noise = OrnsteinUhlenbeckProcess(size = self.actions_dim)
             time = 0
+
+            # For plotting
+            episodes_rewards = []
 
             while not done:
                 if render: env.render()
@@ -61,8 +65,11 @@ class Agent:
                     # Update target models
                     self.actor.update_target_model()
                     self.critic.update_target_model()
+            
+            print(episode_reward)
+            episodes_rewards.append(episode_reward)
 
-    def evaluate(self, env, nb_episodes):
+    def evaluate(self, env, nb_episodes, render=False):
         scores = []
         for _ in range(nb_episodes):
             state = env.reset()
@@ -70,7 +77,7 @@ class Agent:
             done = False
             
             while not done:
-                env.render()
+                if render: env.render()
                 action = self.actor.choose_action(np.expand_dims(state, 0))[0]
                 # action = env.action_space.sample()
                 next_state, reward, done, _ = env.step(action)                
@@ -81,3 +88,13 @@ class Agent:
         
         print(scores)
         print(np.mean(scores))
+    
+    def save(self, path):
+        path += '_LR_{}'.format(self.lr)
+        self.actor.save_model(path)
+        self.critic.save_model(path)
+
+    def load(self, path_actor, path_critic):
+        self.critic.load_model(path_critic)
+        self.actor.load_model(path_actor)
+
