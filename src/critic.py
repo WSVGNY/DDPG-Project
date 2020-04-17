@@ -60,3 +60,9 @@ class Critic:
         for i in range(len(weights)):
             target_weights[i] = self.tau * weights[i] + (1 - self.tau) * target_weights[i]
         self.target_model.set_weights(target_weights)
+    
+    def save_model(self, path):
+        self.model.save_weights(path + '_actor.h5')
+
+    def load_model(self, path):
+        self.model.load_weights(path)
