@@ -28,7 +28,7 @@ class Agent:
         return target_rewards
 
     def train(self, env, nb_episodes=5000, render=False):
-        for _ in range(nb_episodes):
+        for i in range(nb_episodes):
             
             # Reinitialiser le jeu
             state = env.reset()
@@ -76,6 +76,8 @@ class Agent:
             
             print(episode_reward)
             episodes_rewards.append(episode_reward)
+            self.save("./saved_models/", i)
+            self.save_rewards(i, episode_reward)
 
     def evaluate(self, env, nb_episodes, render=False):
         scores = []
@@ -97,12 +99,16 @@ class Agent:
         print(scores)
         print(np.mean(scores))
     
-    def save(self, path):
-        path += '_LR_{}'.format(self.lr)
+    def save(self, path, episode):
+        path += '_LR_{}_ep{}'.format(self.lr, episode)
         self.actor.save_model(path)
         self.critic.save_model(path)
 
     def load(self, path_actor, path_critic):
         self.critic.load_model(path_critic)
         self.actor.load_model(path_actor)
+    
+    def save_rewards(self, episode_num, reward):
+        with open("rewards.csv", "a") as f:
+            f.write("{}, {}".format(episode_num, reward))
 

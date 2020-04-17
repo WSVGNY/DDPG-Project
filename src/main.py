@@ -39,7 +39,7 @@ def main():
     agent = Agent(state_dim, action_dim)
     
     agent.train(env, render=True, nb_episodes=10)
-    agent.save("./saved_models/")
+    agent.save("./saved_models/", final)
     agent.evaluate(env, 10, render=True)
 
     env.close()
