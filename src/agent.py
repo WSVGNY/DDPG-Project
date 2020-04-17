@@ -3,6 +3,7 @@ from actor import Actor
 from critic import Critic
 from utils.actionnoise import OrnsteinUhlenbeckProcess
 from utils.replaybuffer import ReplayBuffer
+import tensorflow as tf
 
 MINIBATCH_SIZE = 64
 
@@ -58,9 +59,16 @@ class Agent:
 
                     # Update models
                     self.critic.train(states, actions, target_rewards)
-                    training_actions = self.actor.choose_action(states)
-                    training_actions_gradients = self.critic.get_action_gradients(states, training_actions)
-                    self.actor.train(states, training_actions_gradients)
+                    # training_actions = self.actor.choose_action(states)
+                    # training_actions_gradients = self.critic.get_action_gradients(states, training_actions)
+                    
+                    with tf.GradientTape() as tape:
+                        y_pred = self.actor.model(states)
+                        q_pred = self.critic.model([states, y_pred])
+                    critic_grads = tape.gradient(q_pred, y_pred)
+                    
+                    # self.actor.train(states, training_actions_gradients)
+                    self.actor.train(states, critic_grads)
 
                     # Update target models
                     self.actor.update_target_model()

@@ -20,7 +20,7 @@ class Critic:
         self.model = self.get_model()
         self.target_model = self.get_model()
 
-        self.action_gradients = kbckend.function([self.model.input[0], self.model.input[1]], kbckend.gradients(self.model.output, [self.model.input[1]]))
+        # self.action_gradients = kbckend.function([self.model.input[0], self.model.input[1]], kbckend.gradients(self.model.output, [self.model.input[1]]))
     
     def get_model(self):
         state_inputs = Input((self.states_dim))
@@ -42,8 +42,8 @@ class Critic:
 
         return model
     
-    def get_action_gradients(self, states, actions):
-        return self.action_gradients([states, actions])
+    # def get_action_gradients(self, states, actions):
+    #     return self.action_gradients([states, actions])
     
     def evaluate_action(self, state, action):
         return self.model.predict([state, action])

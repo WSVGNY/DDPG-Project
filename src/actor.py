@@ -33,8 +33,12 @@ class Actor:
         layer2 = BatchNormalization()(layer2)
         layer2 = Activation("relu")(layer2)
         outputs = Dense(self.outputs_dim, activation = 'tanh', kernel_initializer = RandomUniform(-3e-3, 3e-3))(layer2)
+        model = Model(inputs, outputs)
 
-        return Model(inputs, outputs)
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.lr)
+        model.compile(optimizer=self.optimizer, loss='mse')
+
+        return model
     
     # Train the actor network to maximise the Action - State pair's Q-value
     # outputs-gradients :   Gradient of the Action - State pair's Q-value from Critic with respect to the action
@@ -54,8 +58,15 @@ class Actor:
         return self.target_model.predict(state)
     
     # Backpropagation with gradient of the Action - State pair's Q-value from Critic with respect to the action
-    def train(self, states, gradients):
-        self.optimize([states, gradients])
+    # def train(self, states, gradients):
+    #     self.optimize([states, gradients])
+
+    def train(self, X_train, critic_grads):
+        with tf.GradientTape() as tape:
+            y_pred = self.model(X_train, training=True)
+        actor_grads = tape.gradient(y_pred, self.model.trainable_variables, output_gradients=critic_grads*-1)
+        self.optimizer.apply_gradients(zip(actor_grads, self.model.trainable_variables))
+        #print(actor_grads)
     
     def update_target_model(self):
         weights = self.model.get_weights()
