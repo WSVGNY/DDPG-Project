@@ -4,7 +4,7 @@ import tensorflow.keras.backend as kbckend
 
 from tensorflow.keras.initializers import RandomUniform
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras.layers import Input, Dense, BatchNormalization, Activation
 
 LAYER1_SIZE = 400
 LAYER2_SIZE = 300
@@ -22,8 +22,16 @@ class Actor:
 
     def get_model(self):
         inputs = Input((self.inputs_dim))
-        layer1 = Dense(LAYER1_SIZE, activation = 'relu')(inputs)
-        layer2 = Dense(LAYER2_SIZE, activation = 'relu')(layer1)
+        
+        # layer1 = Dense(LAYER1_SIZE, activation = 'relu')(inputs)
+        layer1 = Dense(LAYER1_SIZE)(inputs)
+        layer1 = BatchNormalization()(layer1)
+        layer1 = Activation("relu")(layer1)
+        
+        # layer2 = Dense(LAYER2_SIZE, activation = 'relu')(layer1)
+        layer2 = Dense(LAYER2_SIZE)(layer1)
+        layer2 = BatchNormalization()(layer2)
+        layer2 = Activation("relu")(layer2)
         outputs = Dense(self.outputs_dim, activation = 'tanh', kernel_initializer = RandomUniform(-3e-3, 3e-3))(layer2)
 
         return Model(inputs, outputs)

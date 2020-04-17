@@ -5,7 +5,7 @@ import tensorflow.keras.backend as kbckend
 from tensorflow.keras.initializers import RandomUniform
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.layers import Input, Dense, concatenate, Flatten
+from tensorflow.keras.layers import Input, Dense, concatenate, Flatten, BatchNormalization, Activation
 
 LAYER1_SIZE = 400
 LAYER2_SIZE = 300
@@ -25,8 +25,17 @@ class Critic:
     def get_model(self):
         state_inputs = Input((self.states_dim))
         action_inputs = Input((self.actions_dim))
-        layer1 = Dense(LAYER1_SIZE, activation = 'relu')(state_inputs)
-        layer2 = Dense(LAYER2_SIZE, activation = 'relu')(concatenate([Flatten()(layer1), action_inputs]))
+        
+        # layer1 = Dense(LAYER1_SIZE, activation = 'relu')(state_inputs)
+        layer1 = Dense(LAYER1_SIZE)(state_inputs)
+        layer1 = BatchNormalization()(layer1)
+        layer1 = Activation("relu")(layer1)
+
+        # layer2 = Dense(LAYER2_SIZE, activation = 'relu')(concatenate([Flatten()(layer1), action_inputs]))
+        layer2 = Dense(LAYER2_SIZE)(concatenate([Flatten()(layer1), action_inputs]))
+        layer2 = BatchNormalization()(layer2)
+        layer2 = Activation("relu")(layer2)
+
         outputs = Dense(1, activation = 'linear', kernel_initializer = RandomUniform(-3e-3, 3e-3))(layer2)
         model = Model([state_inputs, action_inputs], outputs)
         model.compile(Adam(self.lr), 'mse')
