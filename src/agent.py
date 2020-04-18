@@ -4,8 +4,10 @@ from critic import Critic
 from utils.actionnoise import OrnsteinUhlenbeckProcess
 from utils.replaybuffer import ReplayBuffer
 import tensorflow as tf
+from datetime import datetime
+import time
 
-MINIBATCH_SIZE = 64
+MINIBATCH_SIZE = 32
 
 class Agent:
     def __init__(self, states_dim, actions_dim, buffer_size = 20000, gamma = 0.99, lr = 0.00005, tau = 0.001):
@@ -27,31 +29,32 @@ class Agent:
         
         return target_rewards
 
-    def train(self, env, nb_episodes=5000, render=False):
-        for i in range(nb_episodes):
-            
+    def train(self, env, nb_episodes=5000, render=False, loaded_episode=0):
+        for i in range(loaded_episode, loaded_episode + nb_episodes):
             # Reinitialiser le jeu
             state = env.reset()
             episode_reward = 0
             done = False
             noise = OrnsteinUhlenbeckProcess(size = self.actions_dim)
-            time = 0
+            step = 0
 
             # For plotting
             episodes_rewards = []
+            start_time = time.time()
 
             while not done:
                 if render: env.render()
-                action = np.clip(self.actor.choose_action(np.expand_dims(state, 0))[0] + noise.generate(time), -1, 1) 
+                action = np.clip(self.actor.choose_action(np.expand_dims(state, 0))[0] + noise.generate(step), -1, 1) 
                 next_state, reward, done, info = env.step(action)
                 self.replay_buffer.store(state, action, reward, done, next_state)
                 
                 state = next_state
                 episode_reward += reward
-                time += 1
+                print("ep {} step #{} : done in {} s, reward = {}, buffer_size = {}/{}".format(i, step, time.time() - start_time, reward, self.replay_buffer.get_size(), self.replay_buffer.buffer_size))
+                start_time = time.time()
+                step += 1
         
                 if self.replay_buffer.get_size() > MINIBATCH_SIZE:
-                    # Je fais un minibatch mother-fucker
                     states, actions, rewards, dones, next_states = self.replay_buffer.sample(MINIBATCH_SIZE)
                     #q_next
                     next_state_rewards = self.critic.evaluate_action_target(next_states, self.actor.choose_action_target(next_states))
@@ -74,10 +77,10 @@ class Agent:
                     self.actor.update_target_model()
                     self.critic.update_target_model()
             
-            print(episode_reward)
-            episodes_rewards.append(episode_reward)
+            print("{}, {}, {}, {}".format(datetime.now(), i, step, episode_reward))
             self.save("./saved_models/", i)
-            self.save_rewards(i, episode_reward)
+            episodes_rewards.append(episode_reward)
+            self.save_rewards(i, step, episode_reward)
 
     def evaluate(self, env, nb_episodes, render=False):
         scores = []
@@ -100,15 +103,14 @@ class Agent:
         print(np.mean(scores))
     
     def save(self, path, episode):
-        path += '_LR_{}_ep{}'.format(self.lr, episode)
-        self.actor.save_model(path)
-        self.critic.save_model(path)
+        self.actor.save_model("{}{}_actor".format(path, episode))
+        self.critic.save_model("{}{}_critic".format(path, episode))
 
     def load(self, path_actor, path_critic):
         self.critic.load_model(path_critic)
         self.actor.load_model(path_actor)
     
-    def save_rewards(self, episode_num, reward):
+    def save_rewards(self, episode_num, step, reward):
         with open("rewards.csv", "a") as f:
-            f.write("{}, {}".format(episode_num, reward))
+            f.write("{}, {}, {}, {}\n".format(datetime.now(), episode_num, step, reward))
 

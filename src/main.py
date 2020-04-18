@@ -4,6 +4,10 @@ from gym.wrappers import Monitor
 import tensorflow as tf
 import datetime 
 from keras.backend.tensorflow_backend import set_session
+import os
+from os import walk
+
+
 
 ACTOR_LEARNING_RATE = 0.0001
 CRITIC_LEARNING_RATE = 0.001
@@ -27,20 +31,29 @@ MONITOR_DIR = f'./results/${DATETIME}/gym_ddpg'
 # SUMMARY_DIR = f'./results/${DATETIME}/tf_ddpg'
 tf.compat.v1.disable_eager_execution()
 
+SAVED_MODELS_PATH = "./saved_models/"
+
 def main():
-    config = tf.compat.v1.ConfigProto()
-    # config.gpu_options.allow_growth = True
-    set_session(tf.compat.v1.Session(config=config))
+    # For GPU, comment next line
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
     env = LunarLanderGym().env
     state_dim = env.observation_space.shape
     action_dim = env.action_space.shape[0]
 
-    agent = Agent(state_dim, action_dim)
-    
-    agent.train(env, render=True, nb_episodes=10)
-    agent.save("./saved_models/", final)
-    agent.evaluate(env, 10, render=True)
+    agent = Agent(state_dim, action_dim, buffer_size=512)
+    start = 0
+    if not os.path.exists(SAVED_MODELS_PATH):
+        os.mkdir(SAVED_MODELS_PATH)
+    # else:
+    #     (_, _, filenames) = walk(SAVED_MODELS_PATH).next()
+    #     for f in filenames:
+    #         start = max(start, int(f.split("_")[0]))
+    #     agent.load("{}{}_actor".format(SAVED_MODELS_PATH, start), "{}{}_critic".format(SAVED_MODELS_PATH, start))
+
+    for i in range(start, 5000, 10):
+        agent.train(env, render=True, nb_episodes=10, loaded_episode=i)
+        agent.evaluate(env, 10, render=True)
 
     env.close()
 
