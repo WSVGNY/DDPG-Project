@@ -52,7 +52,7 @@ def main():
     #     agent.load("{}{}_actor".format(SAVED_MODELS_PATH, start), "{}{}_critic".format(SAVED_MODELS_PATH, start))
 
     for i in range(start, 5000, 10):
-        agent.train(env, render=False, nb_episodes=10, loaded_episode=i)
+        agent.train(env, render=True, nb_episodes=10, loaded_episode=i)
         agent.evaluate(env, 10, render=True)
 
     env.close()

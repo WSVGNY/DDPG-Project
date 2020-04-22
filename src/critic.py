@@ -54,31 +54,12 @@ class Critic:
     def train(self, states, actions, Q_targets):
         self.model.train_on_batch([states, actions], Q_targets)
     
-    # def update_target_model(self):
-    #     weights = self.model.get_weights()
-    #     target_weights = self.target_model.get_weights()
-    #     for i in range(len(weights)):
-    #         target_weights[i] = self.tau * weights[i] + (1 - self.tau) * target_weights[i]
-    #     self.target_model.set_weights(target_weights)
-
     def update_target_model(self):
-        # weights = self.model.get_weights()
-        source_variables = self.model.weights
-        target_variables = self.target_model.weights
-
-        # for i in range(len(weights)):
-        #     target_weights[i] = self.tau * weights[i] + (1 - self.tau) * target_weights[i]
-        # self.target_model.set_weights(target_weights)
-
-        def update_op(target_variable, source_variable, tau):
-            return target_variable.assign(
-                tau * source_variable + (1.0 - tau) * target_variable, False)
-
-        # with tf.name_scope(name, values=target_variables + source_variables):
-        update_ops = [update_op(target_var, source_var, self.tau)
-                    for target_var, source_var
-                    in zip(target_variables, source_variables)]
-        return tf.group(name="update_all_variables", *update_ops)
+        weights = self.model.get_weights()
+        target_weights = self.target_model.get_weights()
+        for i in range(len(weights)):
+            target_weights[i] = self.tau * weights[i] + (1 - self.tau) * target_weights[i]
+        self.target_model.set_weights(target_weights)
     
     def save_model(self, path):
         self.model.save_weights(path + '_actor.h5')
