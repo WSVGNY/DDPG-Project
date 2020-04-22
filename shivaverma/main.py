@@ -101,7 +101,7 @@ if __name__ == '__main__':
         np.random.seed(0)
         tf.set_random_seed(0)
 
-        ep = 2000
+        ep = 5
         tau = 0.001
         gamma = 0.99
         min_batch = 64
@@ -118,13 +118,13 @@ if __name__ == '__main__':
         scores = train(sess, env, actor, critic, actor_noise, buffer_size, min_batch, ep)
 
 
-        if not os.path.exists("./results"):
-            os.mkdir("./results")
+        if not os.path.exists("results"):
+            os.mkdir("results")
 
-        with open("./results/lr_{}.csv".format(critic_lr), "w") as f:
+        with open("results/shiva_latest_lr_{}.csv".format(critic_lr), "w") as f:
             for i in range(len(scores)):
-                f.write(str(scores[i])[1:-1])
+                f.write(str(scores[i])[1:-1] + "\n")
 
         plt.plot([i + 1 for i in range(0, len(scores), 4)], scores[::4])
-        plt.savefig("./results/lr_{}.png".format(critic_lr))
+        plt.savefig("results/shiva_latest_lr_{}.png".format(critic_lr))
 

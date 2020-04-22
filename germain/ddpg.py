@@ -6,12 +6,13 @@ from actor import Actor
 from critic import Critic
 from networks import tfSummary, OrnsteinUhlenbeckProcess
 from memory_buffer import MemoryBuffer
+import time as time
 
 class DDPG:
     """ Deep Deterministic Policy Gradient (DDPG) Helper Class
     """
 
-    def __init__(self, act_dim, env_dim, act_range, k, buffer_size = 1000000, gamma = 0.99, lr = 0.0005, tau = 0.001):
+    def __init__(self, act_dim, env_dim, act_range, k=2, buffer_size = 1000000, gamma = 0.99, lr = 0.0005, tau = 0.001):
         """ Initialization
         """
         # Environment and A2C parameters
@@ -63,31 +64,31 @@ class DDPG:
         self.actor.transfer_weights()
         self.critic.transfer_weights()
 
-    def train(self, env, args, summary_writer):
-        results = []
+    def train(self, env, render = False, batch_size = 64, nb_episodes=2000):
+        score_list = []
 
         # First, gather experience
-        tqdm_e = tqdm(range(args.nb_episodes), desc='Score', leave=True, unit=" episodes")
-        for e in tqdm_e:
+        # tqdm_e = tqdm(range(args.nb_episodes), desc='Score', leave=True, unit=" episodes")
+        for i in range(nb_episodes):
 
             # Reset episode
-            time, cumul_reward, done = 0, 0, False
+            step, score, done = 0, 0, False
             old_state = env.reset()
             actions, states, rewards = [], [], []
             noise = OrnsteinUhlenbeckProcess(size=self.act_dim)
 
             while not done:
-                if args.render: env.render()
+                if render: env.render()
                 # Actor picks an action (following the deterministic policy)
                 a = self.policy_action(old_state)
                 # Clip continuous values to be valid w.r.t. environment
-                a = np.clip(a+noise.generate(time), -self.act_range, self.act_range)
+                a = np.clip(a+noise.generate(step), -self.act_range, self.act_range)
                 # Retrieve new state, reward, and whether the state is terminal
                 new_state, r, done, _ = env.step(a)
                 # Add outputs to memory buffer
                 self.memorize(old_state, a, r, done, new_state)
                 # Sample experience from buffer
-                states, actions, rewards, dones, new_states, _ = self.sample_batch(args.batch_size)
+                states, actions, rewards, dones, new_states, _ = self.sample_batch(batch_size)
                 # Predict target q-values using target networks
                 q_values = self.critic.target_predict([new_states, self.actor.target_predict(new_states)])
                 # Compute critic target
@@ -96,23 +97,29 @@ class DDPG:
                 self.update_models(states, actions, critic_target)
                 # Update current state
                 old_state = new_state
-                cumul_reward += r
-                time += 1
+                score += r
 
+            avg = np.mean([s[2] for s in score_list[-99:]] + [score])
+            score_list.append((i, time.time(), score, avg))
+            print(str(score_list[-1])[1:-1])
+
+            if avg > 200:
+                print('Task Completed')
+                break
             # Gather stats every episode for plotting
-            if(args.gather_stats):
-                mean, stdev = gather_stats(self, env)
-                results.append([e, mean, stdev])
+            # if(args.gather_stats):
+            #     mean, stdev = gather_stats(self, env)
+            #     results.append([e, mean, stdev])
 
-            # Export results for Tensorboard
-            score = tfSummary('score', cumul_reward)
-            summary_writer.add_summary(score, global_step=e)
-            summary_writer.flush()
-            # Display score
-            tqdm_e.set_description("Score: " + str(cumul_reward))
-            tqdm_e.refresh()
+            # # Export results for Tensorboard
+            # score = tfSummary('score', cumul_reward)
+            # summary_writer.add_summary(score, global_step=e)
+            # summary_writer.flush()
+            # # Display score
+            # tqdm_e.set_description("Score: " + str(cumul_reward))
+            # tqdm_e.refresh()
 
-        return results
+        return score_list
 
     def save_weights(self, path):
         path += '_LR_{}'.format(self.lr)
