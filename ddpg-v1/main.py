@@ -16,12 +16,13 @@ def main():
     # For GPU, comment next line
     parser = argparse.ArgumentParser(description='Training parameters')
     parser.add_argument('--lr', type=float, default=0.005)
-    parser.add_argument('--gpu', type=str, default=0, help='GPU ID')
+    parser.add_argument('--gpu', type=str, default="-1", help='GPU ID')
 
     args = parser.parse_args(sys.argv[1:])
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     critic_lr = args.lr
 
+    set_session(tf.Session())
     env = LunarLanderGym().env
     state_dim = env.observation_space.shape
     action_dim = env.action_space.shape[0]
