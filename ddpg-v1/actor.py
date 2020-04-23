@@ -49,8 +49,9 @@ class Actor:
         params_gradients = tf.gradients(self.model.output, self.model.trainable_weights, -outputs_gradients)
         gradients = zip(params_gradients, self.model.trainable_weights)
 
-        return kbckend.function(inputs=[self.model.input, outputs_gradients], outputs=[kbckend.constant(1)], updates=[tf.optimizers.Adam(self.lr).apply_gradients(gradients)][1:])
-    
+        return kbckend.function(inputs=[self.model.input, outputs_gradients], outputs=[kbckend.constant(1)], updates=[tf.train.AdamOptimizer(self.lr).apply_gradients(gradients)][1:])
+        # tf.train.AdamOptimizer(self.lr).apply_gradients(grads)
+
     def choose_action(self, state):
         return self.model.predict(state)
 
@@ -58,22 +59,35 @@ class Actor:
         return self.target_model.predict(state)
     
     # Backpropagation with gradient of the Action - State pair's Q-value from Critic with respect to the action
-    # def train(self, states, gradients):
-    #     self.optimize([states, gradients])
+    def train(self, states, gradients):
+        self.optimize([states, gradients])
 
-    def train(self, X_train, critic_grads):
-        with tf.GradientTape() as tape:
-            y_pred = self.model(X_train, training=True)
-        actor_grads = tape.gradient(y_pred, self.model.trainable_variables, output_gradients=critic_grads*-1)
-        self.optimizer.apply_gradients(zip(actor_grads, self.model.trainable_variables))
+    # def train(self, X_train, critic_grads):
+    #     with tf.GradientTape() as tape:
+    #         y_pred = self.model(X_train, training=True)
+    #     actor_grads = tape.gradient(y_pred, self.model.trainable_variables, output_gradients=critic_grads*-1)
+    #     self.optimizer.apply_gradients(zip(actor_grads, self.model.trainable_variables))
         #print(actor_grads)
     
     def update_target_model(self):
         weights = self.model.get_weights()
         target_weights = self.target_model.get_weights()
+        # source_variables = self.model.weights
+        # target_variables = self.target_model.weights
+
         for i in range(len(weights)):
             target_weights[i] = self.tau * weights[i] + (1 - self.tau) * target_weights[i]
         self.target_model.set_weights(target_weights)
+
+        # def update_op(target_variable, source_variable, tau):
+        #     return target_variable.assign(
+        #         tau * source_variable + (1.0 - tau) * target_variable, False)
+
+        # # with tf.name_scope(name, values=target_variables + source_variables):
+        # update_ops = [update_op(target_var, source_var, self.tau)
+        #             for target_var, source_var
+        #             in zip(target_variables, source_variables)]
+        # return tf.group(name="update_all_variables", *update_ops)
     
     def save_model(self, path):
         self.model.save_weights(path + '_actor.h5')

@@ -67,10 +67,12 @@ def main(args=None):
     act_range = action_space.high
 
     # Pick algorithm to train
-    algo = DDPG(action_dim, state_dim, act_range, lr=critic_lr)
+    algo = DDPG(action_dim, state_dim, act_range, lr=critic_lr, buffer_size=1000000)
 
     # Train
-    scores = algo.train(env, nb_episodes=5)
+    scores = algo.train(env, nb_episodes=2000)
+
+
     if not os.path.exists("results"):
         os.mkdir("results")
 
