@@ -25,7 +25,7 @@ def main():
     set_session(tf.Session())
     env = LunarLanderGym().env
     state_dim = env.observation_space.shape
-    action_dim = env.action_space.shape[0]
+    action_dim = env.action_space.high.shape[0]
 
     agent = Agent(state_dim, action_dim, buffer_size=1000000, minibatch_size=64, lr=critic_lr)
     scores = agent.train(env, render=False, nb_episodes=2000)
@@ -33,11 +33,15 @@ def main():
     if not os.path.exists("results"):
         os.mkdir("results")
 
+    episode_score = []
+    average_score = []
     with open("results/ddpg-v1_latest_lr_{}.csv".format(critic_lr), "w") as f:
         for i in range(len(scores)):
             f.write(str(scores[i])[1:-1] + "\n")
+            episode_score.append(scores[i][2])
+            average_score.append(scores[i][3])
 
-    plt.plot([i + 1 for i in range(0, len(scores), 4)], scores[::4])
+    plt.plot(list(range(len(scores))), episode_score, average_score)
     plt.savefig("results/ddpg-v1_latest_lr_{}.png".format(critic_lr))
 
     env.close()

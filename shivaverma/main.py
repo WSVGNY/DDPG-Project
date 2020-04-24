@@ -86,7 +86,7 @@ def train(sess, env, actor, critic, actor_noise, buffer_size, min_batch, ep):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training parameters')    
     parser.add_argument('--lr', type=float, default=0.005)
-    parser.add_argument('--gpu', type=str, default=0, help='GPU ID')
+    parser.add_argument('--gpu', type=str, default="-1", help='GPU ID')
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -101,7 +101,7 @@ if __name__ == '__main__':
         np.random.seed(0)
         tf.set_random_seed(0)
 
-        ep = 2000
+        ep = 5
         tau = 0.001
         gamma = 0.99
         min_batch = 64
@@ -121,10 +121,14 @@ if __name__ == '__main__':
         if not os.path.exists("results"):
             os.mkdir("results")
 
+        episode_score = []
+        average_score = []
         with open("results/shiva_latest_lr_{}.csv".format(critic_lr), "w") as f:
             for i in range(len(scores)):
                 f.write(str(scores[i])[1:-1] + "\n")
+                episode_score.append(scores[i][2])
+                average_score.append(scores[i][3])
 
-        plt.plot([i + 1 for i in range(0, len(scores), 4)], scores[::4])
+        plt.plot(list(range(len(scores))), episode_score, average_score)
         plt.savefig("results/shiva_latest_lr_{}.png".format(critic_lr))
 

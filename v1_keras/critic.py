@@ -7,8 +7,8 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import Input, Dense, concatenate, Flatten, BatchNormalization, Activation
 
-LAYER1_SIZE = 400
-LAYER2_SIZE = 300
+LAYER1_SIZE = 256
+LAYER2_SIZE = 128
 
 class Critic:
     def __init__(self, states_dim, actions_dim, lr, tau):

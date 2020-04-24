@@ -44,7 +44,7 @@ def parse_args(args):
     #
     # parser.set_defaults(render=False)
     parser.add_argument('--lr', type=float, default=0.005)
-    parser.add_argument('--gpu', type=str, default=0, help='GPU ID')
+    parser.add_argument('--gpu', type=str, default="-1", help='GPU ID')
 
     return parser.parse_args(args)
 
@@ -76,11 +76,15 @@ def main(args=None):
     if not os.path.exists("results"):
         os.mkdir("results")
 
+    episode_score = []
+    average_score = []
     with open("results/germain_latest_lr_{}.csv".format(critic_lr), "w") as f:
         for i in range(len(scores)):
             f.write(str(scores[i])[1:-1] + "\n")
+            episode_score.append(scores[i][2])
+            average_score.append(scores[i][3])
 
-    plt.plot([i + 1 for i in range(0, len(scores), 4)], scores[::4])
+    plt.plot(list(range(len(scores))), episode_score, average_score)
     plt.savefig("results/germain_latest_lr_{}.png".format(critic_lr))
 
     # Export results to CSV
