@@ -77,34 +77,19 @@ def main(args=None):
     if not os.path.exists("results"):
         os.mkdir("results")
 
+    filename = "results/v1-latest_lr-{}_ep-{}".format(critic_lr,args.ep)
+    
     episode_score = []
     average_score = []
-    with open("results/germain_latest_lr_{}.csv".format(critic_lr), "w") as f:
+    with open(filename + ".csv", "w") as f:
         for i in range(len(scores)):
             f.write(str(scores[i])[1:-1] + "\n")
             episode_score.append(scores[i][2])
             average_score.append(scores[i][3])
 
     plt.plot(list(range(len(scores))), episode_score, average_score)
-    plt.savefig("results/germain_latest_lr_{}.png".format(critic_lr))
+    plt.savefig(filename + ".png")
 
-    # Export results to CSV
-    # if(args.gather_stats):
-    #     df = pd.DataFrame(np.array(stats))
-    #     df.to_csv(args.type + "/logs.csv", header=['Episode', 'Mean', 'Stddev'], float_format='%10.5f')
-
-    # Save weights and close environments
-    # exp_dir = '{}/models/'.format(args.type)
-    # if not os.path.exists(exp_dir):
-    #     os.makedirs(exp_dir)
-
-    # export_path = '{}{}_ENV_{}_NB_EP_{}_BS_{}'.format(exp_dir,
-    #     args.type,
-    #     args.env,
-    #     args.nb_episodes,
-    #     args.batch_size)
-
-    # algo.save_weights(export_path)
     env.env.close()
 
 if __name__ == "__main__":

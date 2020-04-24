@@ -123,14 +123,16 @@ if __name__ == '__main__':
         if not os.path.exists("results"):
             os.mkdir("results")
 
+        filename = "results/v1-latest_lr-{}_ep-{}".format(critic_lr,args.ep)
+
         episode_score = []
         average_score = []
-        with open("results/shiva_latest_lr_{}.csv".format(critic_lr), "w") as f:
+        with open(filename + ".csv", "w") as f:
             for i in range(len(scores)):
                 f.write(str(scores[i])[1:-1] + "\n")
                 episode_score.append(scores[i][2])
                 average_score.append(scores[i][3])
 
         plt.plot(list(range(len(scores))), episode_score, average_score)
-        plt.savefig("results/shiva_latest_lr_{}.png".format(critic_lr))
+        plt.savefig(filename + ".png")
 
