@@ -78,7 +78,7 @@ def train(sess, env, actor, critic, actor_noise, buffer_size, min_batch, ep):
         print(str(score_list[-1])[1:-1])
 
         if avg > 200:
-                print('Task completed in {}'.format(time.time() - start_time))
+            print('Task completed in {}'.format(time.time() - start_time))
             break
 
     return score_list
