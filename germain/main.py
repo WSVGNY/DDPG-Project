@@ -44,6 +44,7 @@ def parse_args(args):
     #
     # parser.set_defaults(render=False)
     parser.add_argument('--lr', type=float, default=0.0005)
+    parser.add_argument('--ep', type=int, default=2000)
     parser.add_argument('--gpu', type=str, default="-1", help='GPU ID')
 
     return parser.parse_args(args)
@@ -70,7 +71,7 @@ def main(args=None):
     algo = DDPG(action_dim, state_dim, act_range, lr=critic_lr, buffer_size=1000000)
 
     # Train
-    scores = algo.train(env, nb_episodes=5000)
+    scores = algo.train(env, nb_episodes=args.ep)
 
 
     if not os.path.exists("results"):

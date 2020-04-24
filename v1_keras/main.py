@@ -16,6 +16,7 @@ def main():
     # For GPU, comment next line
     parser = argparse.ArgumentParser(description='Training parameters')
     parser.add_argument('--lr', type=float, default=0.0005)
+    parser.add_argument('--ep', type=int, default=2000)
     parser.add_argument('--gpu', type=str, default="-1", help='GPU ID')
 
     args = parser.parse_args(sys.argv[1:])
@@ -28,7 +29,7 @@ def main():
     action_dim = env.action_space.high.shape[0]
 
     agent = Agent(state_dim, action_dim, buffer_size=1000000, minibatch_size=64, lr=critic_lr)
-    scores = agent.train(env, render=False, nb_episodes=5000)
+    scores = agent.train(env, render=False, nb_episodes=args.ep)
 
     if not os.path.exists("results"):
         os.mkdir("results")

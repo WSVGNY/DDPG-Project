@@ -87,6 +87,7 @@ def train(sess, env, actor, critic, actor_noise, buffer_size, min_batch, ep):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training parameters')    
     parser.add_argument('--lr', type=float, default=0.0005)
+    parser.add_argument('--ep', type=int, default=2000)
     parser.add_argument('--gpu', type=str, default="-1", help='GPU ID')
 
     args = parser.parse_args(sys.argv[1:])
@@ -102,7 +103,7 @@ if __name__ == '__main__':
         np.random.seed(0)
         tf.set_random_seed(0)
 
-        ep = 5000
+        ep = args.ep
         tau = 0.001
         gamma = 0.99
         min_batch = 64
