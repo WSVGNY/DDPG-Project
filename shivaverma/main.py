@@ -28,6 +28,7 @@ def train(sess, env, actor, critic, actor_noise, buffer_size, min_batch, ep):
     max_episodes = ep
     max_steps = 3000
     score_list = []
+    start_time = time.time()
 
     for i in range(max_episodes):
 
@@ -73,11 +74,11 @@ def train(sess, env, actor, critic, actor_noise, buffer_size, min_batch, ep):
                 break
         
         avg = np.mean([s[2] for s in score_list[-99:]] + [score])
-        score_list.append((i, time.time(), score, avg))
+        score_list.append((i, time.time() - start_time, score, avg))
         print(str(score_list[-1])[1:-1])
 
         if avg > 200:
-            print('Task Completed')
+                print('Task completed in {}'.format(time.time() - start_time))
             break
 
     return score_list
@@ -85,7 +86,7 @@ def train(sess, env, actor, critic, actor_noise, buffer_size, min_batch, ep):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training parameters')    
-    parser.add_argument('--lr', type=float, default=0.005)
+    parser.add_argument('--lr', type=float, default=0.0005)
     parser.add_argument('--gpu', type=str, default="-1", help='GPU ID')
 
     args = parser.parse_args(sys.argv[1:])

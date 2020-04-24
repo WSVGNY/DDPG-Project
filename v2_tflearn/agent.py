@@ -32,6 +32,7 @@ class Agent:
     def train(self, env, nb_episodes=5000, render=False):
         self.session.run(tf.global_variables_initializer())
         score_list = []
+        start_time = time.time()
         for i in range(nb_episodes):
             # Reinitialiser le jeu
             state = env.reset()
@@ -49,7 +50,7 @@ class Agent:
                 state = next_state
                 episode_reward += reward
                 # print("ep {} step #{} : done in {} s, reward = {}, buffer_size = {}/{}".format(i, step, time.time() - start_time, reward, self.replay_buffer.get_size(), self.replay_buffer.buffer_size))
-                start_time = time.time()
+                
                 step += 1
         
                 if self.replay_buffer.get_size() > self.minibatch_size:
@@ -70,11 +71,11 @@ class Agent:
                     self.critic.update_target_model()
             
             avg = np.mean([s[2] for s in score_list[-99:]] + [episode_reward])
-            score_list.append((i, time.time(), episode_reward, avg))
+            score_list.append((i, time.time() - start_time, episode_reward, avg))
             print(str(score_list[-1])[1:-1])
 
             if avg > 200:
-                print('Task Completed')
+                print('Task completed in {}'.format(time.time() - start_time))
                 break
         return score_list
 

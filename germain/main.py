@@ -43,7 +43,7 @@ def parse_args(args):
     # parser.add_argument('--gpu', type=int, default=0, help='GPU ID')
     #
     # parser.set_defaults(render=False)
-    parser.add_argument('--lr', type=float, default=0.005)
+    parser.add_argument('--lr', type=float, default=0.0005)
     parser.add_argument('--gpu', type=str, default="-1", help='GPU ID')
 
     return parser.parse_args(args)

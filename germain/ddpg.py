@@ -69,6 +69,7 @@ class DDPG:
 
         # First, gather experience
         # tqdm_e = tqdm(range(args.nb_episodes), desc='Score', leave=True, unit=" episodes")
+        start_time = time.time()
         for i in range(nb_episodes):
 
             # Reset episode
@@ -100,11 +101,11 @@ class DDPG:
                 score += r
 
             avg = np.mean([s[2] for s in score_list[-99:]] + [score])
-            score_list.append((i, time.time(), score, avg))
+            score_list.append((i, time.time() - start_time, score, avg))
             print(str(score_list[-1])[1:-1])
 
             if avg > 200:
-                print('Task Completed')
+                print('Task completed in {}'.format(time.time() - start_time))
                 break
             # Gather stats every episode for plotting
             # if(args.gather_stats):

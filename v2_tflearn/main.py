@@ -14,7 +14,7 @@ import argparse
 def main():
     # For GPU, comment next line
     parser = argparse.ArgumentParser(description='Training parameters')
-    parser.add_argument('--lr', type=float, default=0.005)
+    parser.add_argument('--lr', type=float, default=0.0005)
     parser.add_argument('--gpu', type=str, default="-1", help='GPU ID')
 
     args = parser.parse_args(sys.argv[1:])
