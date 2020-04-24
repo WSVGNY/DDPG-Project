@@ -102,7 +102,7 @@ if __name__ == '__main__':
         np.random.seed(0)
         tf.set_random_seed(0)
 
-        ep = 5
+        ep = 5000
         tau = 0.001
         gamma = 0.99
         min_batch = 64

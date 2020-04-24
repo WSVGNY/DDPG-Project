@@ -70,7 +70,7 @@ def main(args=None):
     algo = DDPG(action_dim, state_dim, act_range, lr=critic_lr, buffer_size=1000000)
 
     # Train
-    scores = algo.train(env, nb_episodes=2000)
+    scores = algo.train(env, nb_episodes=5000)
 
 
     if not os.path.exists("results"):
