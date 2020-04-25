@@ -123,7 +123,7 @@ if __name__ == '__main__':
         if not os.path.exists("results"):
             os.mkdir("results")
 
-        filename = "results/v1-latest_lr-{}_ep-{}".format(critic_lr,args.ep)
+        filename = "results/shiv_lr-{}_ep-{}".format(critic_lr,args.ep)
 
         episode_score = []
         average_score = []
