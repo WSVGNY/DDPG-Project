@@ -7,21 +7,20 @@ import tensorflow as tf
 from datetime import datetime
 import time
 
-MINIBATCH_SIZE = 32
-
 class Agent:
-    def __init__(self, states_dim, actions_dim, buffer_size = 20000, gamma = 0.99, lr = 0.00005, tau = 0.001):
+    def __init__(self, states_dim, actions_dim, buffer_size = 20000, gamma = 0.99, lr = 0.0005, tau = 0.001, minibatch_size=64):
         self.states_dim = states_dim
         self.actions_dim = actions_dim
         self.gamma = gamma
         self.lr = lr
         self.replay_buffer = ReplayBuffer(buffer_size)
+        self.minibatch_size = minibatch_size
         self.actor = Actor(self.states_dim, self.actions_dim, 0.1 * lr, tau)
         self.critic = Critic(self.states_dim, self.actions_dim, lr, tau)
 
     def bellman(self, rewards, dones, next_state_rewards):
         target_rewards = np.asarray(next_state_rewards)
-        for i in range(MINIBATCH_SIZE):
+        for i in range(self.minibatch_size):
             if dones[i]:
                 target_rewards[i] = rewards[i] 
             else:
@@ -29,8 +28,10 @@ class Agent:
         
         return target_rewards
 
-    def train(self, env, nb_episodes=5000, render=False, loaded_episode=0):
-        for i in range(loaded_episode, loaded_episode + nb_episodes):
+    def train(self, env, nb_episodes=5000, render=False):
+        score_list = []
+        start_time = time.time()
+        for i in range(nb_episodes):
             # Reinitialiser le jeu
             state = env.reset()
             episode_reward = 0
@@ -40,7 +41,6 @@ class Agent:
 
             # For plotting
             episodes_rewards = []
-            start_time = time.time()
 
             while not done:
                 if render: env.render()
@@ -50,37 +50,35 @@ class Agent:
                 
                 state = next_state
                 episode_reward += reward
-                print("ep {} step #{} : done in {} s, reward = {}, buffer_size = {}/{}".format(i, step, time.time() - start_time, reward, self.replay_buffer.get_size(), self.replay_buffer.buffer_size))
-                start_time = time.time()
+                # print("ep {} step #{} : done in {} s, reward = {}, buffer_size = {}/{}".format(i, step, time.time() - start_time, reward, self.replay_buffer.get_size(), self.replay_buffer.buffer_size))
                 step += 1
         
-                if self.replay_buffer.get_size() > MINIBATCH_SIZE:
-                    states, actions, rewards, dones, next_states = self.replay_buffer.sample(MINIBATCH_SIZE)
+                if self.replay_buffer.get_size() > self.minibatch_size:
+                    states, actions, rewards, dones, next_states = self.replay_buffer.sample(self.minibatch_size)
+
                     #q_next
                     next_state_rewards = self.critic.evaluate_action_target(next_states, self.actor.choose_action_target(next_states))
+
                     target_rewards = self.bellman(rewards, dones, next_state_rewards)
 
                     # Update models
                     self.critic.train(states, actions, target_rewards)
-                    # training_actions = self.actor.choose_action(states)
-                    # training_actions_gradients = self.critic.get_action_gradients(states, training_actions)
-                    
-                    with tf.GradientTape() as tape:
-                        y_pred = self.actor.model(states)
-                        q_pred = self.critic.model([states, y_pred])
-                    critic_grads = tape.gradient(q_pred, y_pred)
-                    
-                    # self.actor.train(states, training_actions_gradients)
-                    self.actor.train(states, critic_grads)
+                    training_actions = self.actor.choose_action(states)
+                    training_actions_gradients = self.critic.get_action_gradients(states, training_actions)
+                    self.actor.train(states, training_actions_gradients)
 
                     # Update target models
                     self.actor.update_target_model()
                     self.critic.update_target_model()
             
-            print("{}, {}, {}, {}".format(datetime.now(), i, step, episode_reward))
-            self.save("./saved_models/", i)
-            episodes_rewards.append(episode_reward)
-            self.save_rewards(i, step, episode_reward)
+            avg = np.mean([s[2] for s in score_list[-99:]] + [episode_reward])
+            score_list.append((i, time.time() - start_time, episode_reward, avg))
+            print(str(score_list[-1])[1:-1])
+
+            if avg > 200:
+                print('Task completed in {}'.format(time.time() - start_time))
+                break
+        return score_list
 
     def evaluate(self, env, nb_episodes, render=False):
         scores = []
@@ -103,14 +101,14 @@ class Agent:
         print(np.mean(scores))
     
     def save(self, path, episode):
-        self.actor.save_model("{}{}_actor".format(path, episode))
-        self.critic.save_model("{}{}_critic".format(path, episode))
+        self.actor.save_model("{}{}".format(path, episode))
+        self.critic.save_model("{}{}".format(path, episode))
 
     def load(self, path_actor, path_critic):
         self.critic.load_model(path_critic)
         self.actor.load_model(path_actor)
     
     def save_rewards(self, episode_num, step, reward):
-        with open("rewards.csv", "a") as f:
+        with open("rewards_{}_{}.csv".format(self.replay_buffer.buffer_size, self.minibatch_size), "a") as f:
             f.write("{}, {}, {}, {}\n".format(datetime.now(), episode_num, step, reward))
 
