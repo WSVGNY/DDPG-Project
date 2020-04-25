@@ -92,12 +92,12 @@ x_index = 0
 # 2 for per-episode result, 3 for average of last 100
 y_index = 3
 # codebase
-codebase = "v2"
+codebase = "shiva"
 # learning rates
 lrs = ['0.0001', '0.0002', '0.0003', '0.0004', '0.0005', '0.0006', '0.0007', '0.0008', '0.0009', '0.001']
 
-# for lr in lrs:
-#     showComparisionGraphs(x_index, y_index, codebase, lr)
+for lr in lrs:
+    showComparisionGraphs(x_index, y_index, codebase, lr)
 for lr in lrs:
     x, average_y = showAverageBetweenSystems(y_index, codebase, lr)
     plt.plot(x, average_y, label=lr)
@@ -107,6 +107,7 @@ plt.xlabel("episode")
 plt.ylabel("score")
 plt.title("Average of 100 last episodes over every system")
 plt.legend()
+plt.savefig("results/generated_graphs/" + codebase + "_all_lr_averaged.png")
 plt.show()
 
 
